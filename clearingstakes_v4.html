@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClearingStakes — LP Stake Liquidity</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,600&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --ink:#0A1F14;
+  --forest:#0D4A2F;
+  --forest-mid:#1A6B45;
+  --forest-light:#B8E4A0;
+  --cream:#FAF8F3;
+  --cream-dark:#F0EDE4;
+  --amber:#C8860A;
+  --amber-light:#F5E6C0;
+  --amber-pale:#FDF8ED;
+  --orange:#E8580A;
+  --orange-light:#FEE8DC;
+  --white:#FFFFFF;
+  --muted:#6B7B6E;
+  --border:#E2DDD4;
+  --serif:'Playfair Display',serif;
+  --sans:'DM Sans',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--sans);font-size:16px;line-height:1.7;color:var(--ink);background:var(--cream)}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes tickerScroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+.fade-up{animation:fadeUp 0.7s ease forwards;opacity:0}
+.d1{animation-delay:0.1s}.d2{animation-delay:0.25s}.d3{animation-delay:0.4s}.d4{animation-delay:0.55s}.d5{animation-delay:0.7s}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;width:100%;z-index:100;background:rgba(250,248,243,0.97);backdrop-filter:blur(16px);border-bottom:1px solid var(--border)}
+.nav-inner{max-width:1200px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:66px;padding:0 2rem}
+.nav-logo{font-family:var(--serif);font-size:19px;font-weight:700;color:var(--forest);text-decoration:none;letter-spacing:-0.02em}
+.nav-logo em{color:var(--orange);font-style:italic}
+.nav-links{display:flex;align-items:center;gap:1.75rem;list-style:none}
+.nav-links a{color:var(--muted);text-decoration:none;font-size:14px;transition:color 0.2s}
+.nav-links a:hover{color:var(--forest)}
+.nav-actions{display:flex;align-items:center;gap:0.75rem}
+.btn-buyers{font-size:13px;font-weight:500;color:var(--white);background:var(--orange);text-decoration:none;padding:8px 16px;border-radius:6px;transition:all 0.2s;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.btn-buyers:hover{background:#D04D08}
+.btn-buyers-dot{width:6px;height:6px;border-radius:50%;background:var(--forest-light)}
+.btn-nav{background:var(--forest);color:var(--white);padding:9px 18px;border-radius:6px;font-size:14px;font-weight:500;text-decoration:none;transition:background 0.2s;white-space:nowrap}
+.btn-nav:hover{background:var(--forest-mid)}
+
+/* ── BUTTONS ── */
+.btn-primary{background:var(--forest);color:var(--white);padding:13px 24px;border-radius:8px;font-size:15px;font-weight:500;text-decoration:none;transition:all 0.2s;display:inline-flex;align-items:center;gap:10px;cursor:pointer;border:none}
+.btn-primary:hover{background:var(--forest-mid);transform:translateY(-1px)}
+.btn-primary .arr{width:20px;height:20px;background:var(--orange);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.btn-primary .arr svg{width:10px;height:10px;stroke:white;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.btn-outline{background:transparent;color:var(--forest);padding:13px 24px;border-radius:8px;font-size:15px;font-weight:500;text-decoration:none;border:1.5px solid var(--forest);transition:all 0.2s;display:inline-flex;align-items:center}
+.btn-outline:hover{background:var(--forest);color:var(--white)}
+.btn-ghost{background:transparent;color:var(--muted);padding:13px 20px;border-radius:8px;font-size:14px;text-decoration:none;border:1px solid var(--border);transition:all 0.2s}
+.btn-ghost:hover{border-color:var(--forest);color:var(--forest)}
+.btn-white{background:var(--white);color:var(--forest);padding:13px 24px;border-radius:8px;font-size:15px;font-weight:600;text-decoration:none;transition:all 0.2s;display:inline-flex;align-items:center;gap:10px}
+.btn-white:hover{background:var(--cream)}
+.btn-white .arr{width:20px;height:20px;background:var(--orange);border-radius:50%;display:flex;align-items:center;justify-content:center}
+.btn-white .arr svg{width:10px;height:10px;stroke:white;fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.btn-outline-white{background:transparent;color:rgba(245,247,240,0.75);padding:13px 24px;border-radius:8px;font-size:15px;text-decoration:none;border:1px solid rgba(255,255,255,0.2);transition:all 0.2s}
+.btn-outline-white:hover{border-color:var(--forest-light);color:var(--forest-light)}
+
+/* ── HERO ── */
+#hero{padding:136px 2rem 96px;background:var(--white);position:relative;overflow:hidden}
+.hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse 55% 70% at 85% 40%,var(--amber-pale) 0%,transparent 65%);pointer-events:none}
+.hero-container{max-width:900px;margin:0 auto;position:relative;z-index:1}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;background:var(--orange-light);border-radius:20px;padding:5px 14px;font-size:12px;font-weight:600;color:var(--orange);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:1.75rem}
+.hero-tag-dot{width:5px;height:5px;border-radius:50%;background:var(--orange)}
+h1{font-family:var(--serif);font-size:clamp(40px,5.5vw,68px);font-weight:900;line-height:1.06;letter-spacing:-0.03em;color:var(--ink);margin-bottom:0.75rem}
+h1 .green{color:var(--forest)}
+.hero-sub{font-size:clamp(18px,2vw,23px);font-weight:300;color:var(--muted);line-height:1.5;margin-bottom:1.75rem}
+.hero-sub strong{color:var(--ink);font-weight:500}
+.hero-promise{font-size:16px;color:var(--muted);line-height:1.8;margin-bottom:2rem;max-width:640px;padding:1.25rem 1.5rem;background:var(--cream);border-left:3px solid var(--forest-light);border-radius:0 8px 8px 0}
+.hero-ctas{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:3rem}
+.hero-stats{display:flex;gap:2.5rem;flex-wrap:wrap;padding-top:2rem;border-top:1px solid var(--border)}
+.h-stat-num{font-family:var(--serif);font-size:26px;font-weight:700;color:var(--forest);display:block;line-height:1}
+.h-stat-label{font-size:12px;color:var(--muted);margin-top:4px;display:block;line-height:1.4}
+
+/* ── TICKER ── */
+#ticker{background:var(--ink);padding:18px 0;overflow:hidden;position:relative}
+.ticker-fade{position:absolute;left:0;top:0;bottom:0;width:180px;background:linear-gradient(to right,var(--ink) 50%,transparent);z-index:2;display:flex;align-items:center;padding-left:2rem}
+.ticker-label-text{font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.3);white-space:nowrap}
+.ticker-wrap{overflow:hidden}
+.ticker-track{display:inline-flex;animation:tickerScroll 45s linear infinite;white-space:nowrap}
+.ticker-track:hover{animation-play-state:paused}
+.ticker-item{display:inline-flex;align-items:center;padding:0 2.5rem;font-size:15px;font-weight:400;color:rgba(255,255,255,0.5);white-space:nowrap}
+.ticker-item::after{content:'·';color:rgba(255,255,255,0.2);margin-left:2.5rem}
+
+/* ── STATEMENT ── */
+#statement{padding:64px 2rem;background:var(--forest)}
+.statement-inner{max-width:780px;margin:0 auto;text-align:center}
+.statement-inner blockquote{font-family:var(--serif);font-size:clamp(22px,2.8vw,32px);font-weight:400;font-style:italic;color:rgba(245,247,240,0.85);line-height:1.55;margin-bottom:0.75rem}
+.statement-inner blockquote strong{font-style:normal;font-weight:700;color:var(--forest-light)}
+.statement-inner cite{font-size:13px;color:rgba(245,247,240,0.35);font-style:normal;letter-spacing:0.1em;text-transform:uppercase}
+
+/* ── SECTIONS ── */
+section{padding:88px 2rem}
+.container{max-width:1100px;margin:0 auto}
+.sec-tag{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;color:var(--amber);margin-bottom:1rem}
+.sec-tag-line{width:20px;height:2px;background:var(--amber);border-radius:1px}
+.sec-tag.green{color:var(--forest-light)}
+.sec-tag.green .sec-tag-line{background:var(--forest-light)}
+h2{font-family:var(--serif);font-size:clamp(26px,3vw,38px);font-weight:700;letter-spacing:-0.02em;line-height:1.2;margin-bottom:1.5rem}
+h3{font-size:17px;font-weight:600;margin-bottom:0.625rem;color:var(--ink)}
+
+/* ── PROBLEM ── */
+#problem{background:var(--cream)}
+.problem-layout{display:grid;grid-template-columns:5fr 4fr;gap:5rem;align-items:start;margin-top:3rem}
+.problem-body p{font-size:17px;color:var(--muted);line-height:1.85;margin-bottom:1.25rem}
+.problem-body p strong{color:var(--ink);font-weight:500}
+.problem-cards{display:flex;flex-direction:column;gap:1rem}
+.prob-card{padding:1.375rem 1.5rem;background:var(--white);border:1px solid var(--border);border-radius:10px;position:relative;overflow:hidden}
+.prob-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--orange)}
+.prob-card h4{font-size:14px;font-weight:600;color:var(--ink);margin-bottom:0.375rem}
+.prob-card p{font-size:13px;color:var(--muted);margin:0;line-height:1.6}
+
+/* ── CTA BAND ── */
+.cta-band{background:var(--amber-pale);border-top:1px solid var(--amber-light);border-bottom:1px solid var(--amber-light);padding:48px 2rem}
+.cta-band-inner{max-width:960px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;gap:2rem;flex-wrap:wrap}
+.cta-band-text h3{font-family:var(--serif);font-size:20px;font-weight:700;color:var(--ink);margin-bottom:0.25rem}
+.cta-band-text p{font-size:14px;color:var(--muted);margin:0}
+.cta-band-btns{display:flex;gap:1rem;flex-shrink:0;flex-wrap:wrap}
+
+/* ── WHAT YOU GET ── */
+#get{background:var(--white)}
+.get-intro{max-width:680px;margin-bottom:3rem}
+.get-intro p{font-size:17px;color:var(--muted)}
+.get-flow{display:flex;flex-direction:column;gap:0;margin-bottom:2.5rem;max-width:600px}
+.flow-step{display:flex;gap:1.5rem;align-items:flex-start;padding:1.25rem 0;border-bottom:1px solid var(--border)}
+.flow-step:last-child{border-bottom:none}
+.flow-num{width:36px;height:36px;border-radius:50%;background:var(--forest);color:var(--white);font-family:var(--serif);font-size:15px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.flow-content h4{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:3px}
+.flow-content p{font-size:14px;color:var(--muted);margin:0;line-height:1.6}
+.flow-arrow{display:flex;justify-content:flex-start;padding:0.5rem 0 0.5rem 18px}
+.flow-arrow svg{width:16px;height:16px;stroke:var(--forest-light);fill:none;stroke-width:2}
+.get-checklist{background:var(--cream);border:1px solid var(--border);border-radius:12px;padding:2rem;margin-bottom:2rem}
+.get-checklist-title{font-size:12px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:1.25rem}
+.check-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.75rem}
+.check-item{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--ink)}
+.tick{width:20px;height:20px;border-radius:50%;background:var(--forest-light);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tick svg{width:10px;height:10px;stroke:var(--forest);fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.ai-box{background:var(--forest);border-radius:10px;padding:1.5rem 2rem;color:rgba(245,247,240,0.8);font-size:15px;line-height:1.75}
+.ai-box strong{color:var(--forest-light);font-weight:500}
+
+/* ── QUOTES ── */
+#quotes{background:var(--cream-dark)}
+.quotes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin-top:2.5rem}
+.quote-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:2rem;position:relative}
+.quote-mark{font-family:var(--serif);font-size:48px;color:var(--forest-light);line-height:1;margin-bottom:0.5rem;display:block}
+.quote-text{font-size:15px;color:var(--ink);line-height:1.75;margin-bottom:1.25rem;font-style:italic}
+.quote-author{font-size:13px;color:var(--muted);font-style:normal}
+.quote-result{display:inline-block;margin-top:0.75rem;background:var(--forest);color:var(--forest-light);font-size:12px;font-weight:600;padding:4px 10px;border-radius:4px;letter-spacing:0.04em}
+
+/* ── PROCESS ── */
+#process{background:var(--amber-pale)}
+.process-intro{max-width:580px;margin-bottom:3.5rem}
+.process-intro p{font-size:17px;color:var(--muted)}
+.process-steps{display:grid;grid-template-columns:repeat(5,1fr);gap:0;position:relative}
+.process-steps::before{content:'';position:absolute;top:27px;left:10%;right:10%;height:1px;background:repeating-linear-gradient(to right,var(--amber-light) 0,var(--amber-light) 8px,transparent 8px,transparent 16px)}
+.proc-step{padding:0 0.75rem;position:relative;z-index:1}
+.proc-num{width:54px;height:54px;border-radius:50%;background:var(--amber);color:var(--white);font-family:var(--serif);font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;margin-bottom:1.25rem;box-shadow:0 0 0 5px var(--amber-pale),0 0 0 6px var(--amber-light)}
+.proc-step h4{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:0.5rem;line-height:1.4}
+.proc-step p{font-size:12px;color:var(--muted);line-height:1.6;margin:0}
+.process-note{margin-top:2.5rem;padding:1.25rem 1.5rem;background:rgba(200,134,10,0.07);border:1px solid var(--amber-light);border-radius:8px;font-size:14px;color:var(--muted);border-left:3px solid var(--amber);line-height:1.7}
+.process-note strong{color:var(--ink)}
+.process-cta{margin-top:2rem;display:flex;gap:1rem;flex-wrap:wrap}
+
+/* ── CREDENTIALS ── */
+#credentials{background:var(--forest)}
+.cred-layout{display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:start;margin-top:3rem}
+.cred-left h2{color:var(--white)}
+.cred-left p{color:rgba(245,247,240,0.65);font-size:16px;line-height:1.85;margin-bottom:1.25rem}
+.cred-bg-box{font-size:13px;color:rgba(245,247,240,0.35);padding:1rem 1.25rem;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:8px;line-height:1.9;margin-top:1.5rem}
+.cred-stats{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:1.75rem}
+.cred-stat{padding:1.25rem;background:rgba(255,255,255,0.05);border-radius:10px;text-align:center;border:1px solid rgba(255,255,255,0.07)}
+.cred-stat-num{font-family:var(--serif);font-size:26px;font-weight:700;color:var(--forest-light);display:block;line-height:1}
+.cred-stat-label{font-size:12px;color:rgba(245,247,240,0.38);margin-top:6px;display:block;line-height:1.4}
+.timeline{display:flex;flex-direction:column}
+.tl-item{display:flex;gap:1.5rem;padding:1.25rem 0;border-bottom:1px solid rgba(255,255,255,0.07)}
+.tl-item:last-child{border-bottom:none}
+.tl-left{display:flex;flex-direction:column;align-items:center;gap:6px;flex-shrink:0;padding-top:2px}
+.tl-year{font-family:var(--serif);font-size:15px;font-weight:700;color:var(--amber)}
+.tl-dot{width:8px;height:8px;border-radius:50%;background:var(--orange)}
+.tl-content h4{font-size:14px;font-weight:600;color:var(--white);margin-bottom:3px}
+.tl-content p{font-size:13px;color:rgba(245,247,240,0.48);margin:0;line-height:1.5}
+
+/* ── TRACK RECORD ── */
+#track{background:var(--white)}
+.track-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1.25rem;margin-bottom:3rem}
+.t-stat{padding:1.5rem;background:var(--cream);border-radius:10px;border:1px solid var(--border);text-align:center}
+.t-num{font-family:var(--serif);font-size:30px;font-weight:700;color:var(--forest);line-height:1;display:block}
+.t-label{font-size:13px;color:var(--muted);margin-top:6px;display:block;line-height:1.4}
+table{width:100%;border-collapse:collapse;font-size:14px;background:var(--white);border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+thead th{text-align:left;padding:0.875rem 1.25rem;font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--muted);background:var(--cream);border-bottom:1px solid var(--border)}
+tbody td{padding:1rem 1.25rem;border-bottom:1px solid var(--border);color:var(--ink);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--cream)}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-done{background:#E8F5E0;color:#1A6B45}
+.badge-live{background:var(--orange-light);color:var(--orange)}
+.bdot{width:5px;height:5px;border-radius:50%}
+.badge-done .bdot{background:#1A6B45}
+.badge-live .bdot{background:var(--orange)}
+
+/* ── FAQ ── */
+#faq{background:var(--cream)}
+.faq-layout{display:grid;grid-template-columns:1fr 2fr;gap:5rem;align-items:start;margin-top:3rem}
+details{border-bottom:1px solid var(--border)}
+details:first-of-type{border-top:1px solid var(--border)}
+summary{cursor:pointer;font-weight:500;font-size:15px;color:var(--ink);list-style:none;display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:1.25rem 0}
+summary::-webkit-details-marker{display:none}
+.faq-plus{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--forest);font-size:18px;font-weight:300;transition:all 0.2s;line-height:1}
+details[open] .faq-plus{background:var(--forest);color:var(--white);border-color:var(--forest);transform:rotate(45deg)}
+details p{font-size:15px;color:var(--muted);line-height:1.75;padding-bottom:1.25rem;padding-right:3rem}
+
+/* ── REGISTER ── */
+#register{background:var(--forest);padding:88px 2rem}
+.register-inner{max-width:800px;margin:0 auto;text-align:center}
+.register-inner h2{color:var(--white);margin-bottom:1rem}
+.reg-sub{font-size:17px;font-weight:300;color:rgba(245,247,240,0.65);line-height:1.7;margin-bottom:2.5rem}
+.reg-sub strong{color:var(--forest-light);font-weight:500}
+.reg-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;margin-bottom:2.5rem;text-align:left}
+.reg-step{padding:1.5rem;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:10px}
+.reg-n{font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:var(--forest-light);margin-bottom:0.75rem;display:flex;align-items:center;gap:6px}
+.reg-n::before{content:'';width:16px;height:1px;background:var(--forest-light)}
+.reg-step h4{font-size:14px;font-weight:600;color:var(--white);margin-bottom:0.375rem}
+.reg-step p{font-size:13px;color:rgba(245,247,240,0.48);margin:0;line-height:1.6}
+.reg-ctas{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap}
+
+/* ── FOOTER ── */
+footer{background:var(--ink);color:rgba(245,247,240,0.45);padding:3.5rem 2rem}
+.footer-inner{max-width:1100px;margin:0 auto}
+.footer-top{display:flex;justify-content:space-between;gap:3rem;flex-wrap:wrap;margin-bottom:2.5rem}
+.footer-brand{font-family:var(--serif);font-size:20px;font-weight:700;color:var(--cream);margin-bottom:0.5rem}
+.footer-brand em{color:var(--orange);font-style:italic}
+.footer-tagline{font-size:13px;color:rgba(245,247,240,0.28);max-width:260px;line-height:1.6}
+.footer-cols{display:flex;gap:4rem;flex-wrap:wrap}
+.footer-col h5{font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:rgba(245,247,240,0.22);margin-bottom:1rem}
+.footer-col ul{list-style:none;display:flex;flex-direction:column;gap:0.625rem}
+.footer-col a{color:rgba(245,247,240,0.45);text-decoration:none;font-size:14px;transition:color 0.2s}
+.footer-col a:hover{color:var(--forest-light)}
+.footer-hr{border:none;border-top:1px solid rgba(255,255,255,0.06);margin-bottom:1.5rem}
+.footer-regulatory{font-size:12px;color:rgba(245,247,240,0.35);line-height:1.8;margin-bottom:1.25rem;padding:1.25rem;background:rgba(255,255,255,0.04);border-radius:8px;border:1px solid rgba(255,255,255,0.06)}
+.footer-legal{font-size:12px;color:rgba(245,247,240,0.2);line-height:1.8;max-width:880px}
+
+/* ── MOBILE ── */
+@media(max-width:960px){
+  .problem-layout,.cred-layout,.faq-layout{grid-template-columns:1fr}
+  .get-flow{max-width:100%}
+  .check-grid{grid-template-columns:1fr}
+  .quotes-grid,.process-steps,.track-stats,.reg-steps,.cred-stats{grid-template-columns:1fr}
+  .process-steps::before{display:none}
+  .nav-links{display:none}
+  .footer-cols{gap:2rem}
+  .cta-band-inner{flex-direction:column;text-align:center}
+  .hero-stats{gap:1.5rem}
+  h1{font-size:clamp(36px,8vw,52px)}
+}
+@media(max-width:600px){
+  .nav-inner{padding:0 1rem}
+  section{padding:64px 1rem}
+  #hero{padding:110px 1rem 72px}
+  .btn-primary,.btn-outline,.btn-ghost,.btn-white{padding:12px 18px;font-size:14px}
+  .hero-stats{flex-direction:column;gap:1rem}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="#hero" class="nav-logo">Clearing<em>Stakes</em></a>
+    <ul class="nav-links">
+      <li><a href="#problem">The Problem</a></li>
+      <li><a href="#get">What You Get</a></li>
+      <li><a href="#process">How It Works</a></li>
+      <li><a href="#track">Track Record</a></li>
+      <li><a href="#faq">FAQ</a></li>
+    </ul>
+    <div class="nav-actions">
+      <a href="https://chat.whatsapp.com/YOUR-WA-LINK" target="_blank" class="btn-buyers">
+        <span class="btn-buyers-dot"></span>Buyers: join our network
+      </a>
+      <a href="https://tally.so/YOUR-FORM-ID" target="_blank" class="btn-nav">Apply to see if you qualify</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-container">
+    <div class="hero-tag fade-up d1"><span class="hero-tag-dot"></span>LP Stakes Liquidity</div>
+    <h1 class="fade-up d2">Selling a private fund stake<br>shouldn't be <span class="green">this hard.</span></h1>
+    <p class="hero-sub fade-up d3"><strong>We run the process.</strong> You own the decision.</p>
+    <div class="hero-promise fade-up d4">
+      <p>ClearingStakes delivers one thing: a binding offer from a real buyer, at the best price the market will pay for your position.</p>
+      <p style="margin-top:0.75rem;margin-bottom:0">You describe your stake. We handle everything else — independent assessment, buyer outreach, competitive process, negotiation. You receive an offer and decide whether to accept.</p>
+    </div>
+    <div class="hero-ctas fade-up d5">
+      <a href="https://tally.so/YOUR-FORM-ID" target="_blank" class="btn-primary">Apply to see if you qualify <span class="arr"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span></a>
+      <a href="https://calendly.com/YOUR-CAL-LINK" target="_blank" class="btn-ghost">Speak to the team</a>
+    </div>
+    <div class="hero-stats fade-up d5">
+      <div><span class="h-stat-num">$1.5B+</span><span class="h-stat-label">Transactions advised</span></div>
+      <div><span class="h-stat-num">500+</span><span class="h-stat-label">Qualified buyers globally</span></div>
+      <div><span class="h-stat-num">Since 2002</span><span class="h-stat-label">In secondary markets</span></div>
+      <div><span class="h-stat-num">AI-powered</span><span class="h-stat-label">Buyer matching process</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div id="ticker">
+  <div class="ticker-fade"><span class="ticker-label-text">Our buyer network includes</span></div>
+  <div class="ticker-wrap">
+    <div class="ticker-track">
+      <span class="ticker-item">Secondary Funds</span><span class="ticker-item">Sovereign Wealth Funds</span><span class="ticker-item">Pension Funds</span><span class="ticker-item">Insurance Groups</span><span class="ticker-item">Family Offices</span><span class="ticker-item">Endowments</span><span class="ticker-item">Private Banks</span><span class="ticker-item">Asset Managers</span><span class="ticker-item">Specialist Credit Funds</span><span class="ticker-item">Infrastructure Investors</span>
+      <span class="ticker-item">Secondary Funds</span><span class="ticker-item">Sovereign Wealth Funds</span><span class="ticker-item">Pension Funds</span><span class="ticker-item">Insurance Groups</span><span class="ticker-item">Family Offices</span><span class="ticker-item">Endowments</span><span class="ticker-item">Private Banks</span><span class="ticker-item">Asset Managers</span><span class="ticker-item">Specialist Credit Funds</span><span class="ticker-item">Infrastructure Investors</span>
+    </div>
+  </div>
+</div>
+
+<!-- STATEMENT -->
+<div id="statement">
+  <div class="statement-inner">
+    <blockquote>Selling a private fund stake has always been hard.<br><strong>That was by design.</strong></blockquote>
+    <cite>For the first time, there is a better option.</cite>
+  </div>
+</div>
+
+<!-- PROBLEM -->
+<section id="problem">
+  <div class="container">
+    <div class="sec-tag"><span class="sec-tag-line"></span>The Problem</div>
+    <div class="problem-layout">
+      <div class="problem-body">
+        <h2>The market wasn't built for you. Until now.</h2>
+        <p>Over the past decade, individual investors, founders, and family offices gained access to some of the world's best private equity and venture capital funds. The returns have been real. The problem comes when you want to exit.</p>
+        <p>The exit infrastructure was built for large institutions with $30M+ positions. Below that threshold, your options have historically been limited to one: find a buyer yourself, accept whatever they offer, and hope the price is fair.</p>
+        <p><strong>It usually isn't.</strong></p>
+        <p>Without a structured process, you have no independent view of what your stake is worth. You have no competitive tension between buyers. You have no professional managing the operational complexity of the transfer.</p>
+        <p>ClearingStakes was built specifically for this gap — bringing the same institutional process that large advisors apply to $100M mandates, now accessible for stakes from $1M.</p>
+      </div>
+      <div class="problem-cards">
+        <div class="prob-card">
+          <h4>The large advisors won't take your call</h4>
+          <p>Traditional secondary advisors require mandates of $10M or above. If your stake is smaller, you have been invisible to them.</p>
+        </div>
+        <div class="prob-card">
+          <h4>One buyer means one price — and it's theirs</h4>
+          <p>A single approach produces a single data point. That is not a market price. It is one buyer's return requirement applied to your asset.</p>
+        </div>
+        <div class="prob-card">
+          <h4>You don't know what it's worth</h4>
+          <p>Secondary market pricing is not public. Without an independent assessment, you cannot know whether any offer you receive is fair, low, or deeply discounted.</p>
+        </div>
+        <div class="prob-card">
+          <h4>The process is complex</h4>
+          <p>GP consents. Transfer restrictions. Right of first refusal. NDA management. Legal documentation. For a first-time seller, the operational complexity alone is enough to kill a transaction.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA BAND 1 -->
+<div class="cta-band">
+  <div class="cta-band-inner">
+    <div class="cta-band-text">
+      <h3>Not sure what your position is worth?</h3>
+      <p>That is where we start. No cost. No commitment at this stage.</p>
+    </div>
+    <div class="cta-band-btns">
+      <a href="https://tally.so/YOUR-FORM-ID" target="_blank" class="btn-primary">Apply to see if you qualify <span class="arr"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span></a>
+      <a href="https://calendly.com/YOUR-CAL-LINK" target="_blank" class="btn-outline">Speak to the team</a>
+    </div>
+  </div>
+</div>
+
+<!-- WHAT YOU GET -->
+<section id="get">
+  <div class="container">
+    <div class="sec-tag"><span class="sec-tag-line"></span>What You Get</div>
+    <div class="get-intro">
+      <h2>One outcome. Delivered properly.</h2>
+      <p>You describe your stake. We deliver a binding offer from a real buyer at the best price the market will pay. Everything in between is handled for you.</p>
+    </div>
+    <div class="get-flow">
+      <div class="flow-step">
+        <div class="flow-num">1</div>
+        <div class="flow-content"><h4>You submit your position details</h4><p>Fund type, vintage, approximate NAV, objectives. Five minutes.</p></div>
+      </div>
+      <div class="flow-arrow"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+      <div class="flow-step">
+        <div class="flow-num">2</div>
+        <div class="flow-content"><h4>We conduct an independent assessment</h4><p>We review your fund documentation and form an independent view of current market value. You receive a clear picture of where your position sits relative to reported NAV.</p></div>
+      </div>
+      <div class="flow-arrow"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+      <div class="flow-step">
+        <div class="flow-num">3</div>
+        <div class="flow-content"><h4>We approach 500+ qualified buyers simultaneously</h4><p>AI-powered matching identifies which buyers in our network have current appetite for your specific asset type, geography, and vintage. They compete. You benefit.</p></div>
+      </div>
+      <div class="flow-arrow"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+      <div class="flow-step">
+        <div class="flow-num">4</div>
+        <div class="flow-content"><h4>You receive a binding offer</h4><p>Not an estimate. Not an indication. A real offer from a qualified buyer, at the best price competitive tension has produced. You review it. You decide.</p></div>
+      </div>
+      <div class="flow-arrow"><svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg></div>
+      <div class="flow-step">
+        <div class="flow-num">5</div>
+        <div class="flow-content"><h4>We close</h4><p>If you proceed, we manage legal documentation, GP consents, and the closing process end to end. You receive the proceeds.</p></div>
+      </div>
+    </div>
+    <div class="get-checklist">
+      <p class="get-checklist-title">Everything included</p>
+      <div class="check-grid">
+        <div class="check-item"><span class="tick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>Independent position assessment</div>
+        <div class="check-item"><span class="tick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>NDA management throughout</div>
+        <div class="check-item"><span class="tick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>Access to 500+ qualified buyers</div>
+        <div class="check-item"><span class="tick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>Bid analysis and optimisation</div>
+        <div class="check-item"><span class="tick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>AI-powered buyer matching</div>
+        <div class="check-item"><span class="tick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>GP consent coordination</div>
+        <div class="check-item"><span class="tick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>Dataroom preparation</div>
+        <div class="check-item"><span class="tick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>End-to-end closing management</div>
+        <div class="check-item"><span class="tick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>Full confidentiality throughout</div>
+        <div class="check-item"><span class="tick"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>Regulated advisory service</div>
+      </div>
+    </div>
+    <div class="ai-box">
+      <strong>On AI and information asymmetry.</strong> Secondary market pricing has always favoured buyers — they have proprietary data on hundreds of comparable transactions. Sellers rarely do. ClearingStakes uses AI to close that gap: analysing fund characteristics, comparable transactions, and current buyer appetite to produce an independent valuation before any buyer sees your position. Better information means better pricing. That is what AI makes possible here.
+    </div>
+  </div>
+</section>
+
+<!-- QUOTES -->
+<section id="quotes">
+  <div class="container">
+    <div class="sec-tag"><span class="sec-tag-line"></span>Seller Outcomes</div>
+    <h2>What the process delivers.</h2>
+    <div class="quotes-grid">
+      <div class="quote-card">
+        <span class="quote-mark">"</span>
+        <p class="quote-text">I had been sitting on a €800K position in a 2017 fund for two years. I had no idea what it was worth or who to call. ClearingStakes came back within a week with an independent assessment that surprised me. We closed four months later.</p>
+        <p class="quote-author">LP investor, France</p>
+        <span class="quote-result">Closed in 4 months</span>
+      </div>
+      <div class="quote-card">
+        <span class="quote-mark">"</span>
+        <p class="quote-text">The process was completely hands-off for me. I submitted my documents, received updates at each stage, and eventually had a choice of two offers. I did not know that was even possible at my ticket size.</p>
+        <p class="quote-author">Former founder, Germany</p>
+        <span class="quote-result">Multiple competing offers</span>
+      </div>
+      <div class="quote-card">
+        <span class="quote-mark">"</span>
+        <p class="quote-text">I had one conversation with a buyer who offered me 60 cents on the dollar and told me that was the market. ClearingStakes ran a process and we closed at 81 cents. I did not know the difference until I had a benchmark.</p>
+        <p class="quote-author">Family office principal, UK</p>
+        <span class="quote-result">35% pricing improvement</span>
+      </div>
+    </div>
+    <p style="margin-top:1.5rem;font-size:12px;color:var(--muted);font-style:italic">The above are illustrative of the outcomes the ClearingStakes process is designed to achieve. Individual results depend on market conditions, asset characteristics, and timing.</p>
+  </div>
+</section>
+
+<!-- PROCESS -->
+<section id="process">
+  <div class="container">
+    <div class="sec-tag"><span class="sec-tag-line"></span>How It Works</div>
+    <div class="process-intro">
+      <h2>Behind the scenes.<br>From submission to closing.</h2>
+      <p>You submit your position. We manage everything that follows — across five defined stages, each with a clear deliverable.</p>
+    </div>
+    <div class="process-steps">
+      <div class="proc-step">
+        <div class="proc-num">1</div>
+        <h4>Position assessment</h4>
+        <p>We review fund documentation, NAV statements, and capital account. Independent view on current market value relative to GP-reported NAV.</p>
+      </div>
+      <div class="proc-step">
+        <div class="proc-num">2</div>
+        <h4>Transaction preparation</h4>
+        <p>Dataroom structured. Confidential information memorandum prepared. Target buyer universe identified from our proprietary network.</p>
+      </div>
+      <div class="proc-step">
+        <div class="proc-num">3</div>
+        <h4>Competitive launch</h4>
+        <p>Approved buyers approached simultaneously under NDA. Indicative offers submitted, analysed, finalists selected.</p>
+      </div>
+      <div class="proc-step">
+        <div class="proc-num">4</div>
+        <h4>Bid analysis</h4>
+        <p>All offers assessed. Optimal transaction structure constructed. Binding final round conducted with selected buyers.</p>
+      </div>
+      <div class="proc-step">
+        <div class="proc-num">5</div>
+        <h4>Negotiation and close</h4>
+        <p>Legal documentation managed. GP consents coordinated. Transaction driven to completion.</p>
+      </div>
+    </div>
+    <div class="process-note">
+      <strong>On timeline:</strong> Getting to a first price indication takes days. A binding offer from a qualified buyer takes weeks. Completing the transaction — including legal documentation and GP consents — typically takes 3 to 5 months in total. This is the only way to know what your stake is genuinely worth, and the only way to extract that value with a binding offer from a real buyer.
+    </div>
+    <div class="process-cta">
+      <a href="https://tally.so/YOUR-FORM-ID" target="_blank" class="btn-primary">Apply to see if you qualify <span class="arr"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span></a>
+      <a href="https://calendly.com/YOUR-CAL-LINK" target="_blank" class="btn-ghost">Speak to the team first</a>
+    </div>
+  </div>
+</section>
+
+<!-- CREDENTIALS -->
+<section id="credentials" style="padding:88px 2rem;background:var(--forest)">
+  <div class="container">
+    <div class="sec-tag green"><span class="sec-tag-line"></span>Our Background</div>
+    <div class="cred-layout">
+      <div class="cred-left">
+        <h2>Bulge-bracket investment bank-grade process. Accessible from $1M.</h2>
+        <p>The secondary market has existed for institutional investors since the early 2000s. The processes, the models, the buyer relationships — they were built for mandates starting at $30M.</p>
+        <p>Our team spent decades inside that infrastructure — at the private capital advisory divisions of leading global investment banks and alternative asset managers, advising on over $1.5B in secondary transactions across LP-led and GP-led structures globally.</p>
+        <p>ClearingStakes packages that experience into an AI-assisted process that makes the economics work for positions from $1M. The same analytical rigour. The same buyer network. The same outcome — a competitive, binding offer. Now available to the stakeholders the large advisors have always turned away.</p>
+        <div class="cred-bg-box">Team background: bulge bracket private capital advisory divisions · top-tier alternative asset management · leading secondary investment firms · global emerging markets coverage</div>
+        <div class="cred-stats">
+          <div class="cred-stat"><span class="cred-stat-num">$1.5B+</span><span class="cred-stat-label">Transactions advised</span></div>
+          <div class="cred-stat"><span class="cred-stat-num">500+</span><span class="cred-stat-label">Qualified buyers globally</span></div>
+          <div class="cred-stat"><span class="cred-stat-num">25 yrs</span><span class="cred-stat-label">Secondary market experience</span></div>
+          <div class="cred-stat"><span class="cred-stat-num">Global</span><span class="cred-stat-label">Buyer network coverage</span></div>
+        </div>
+      </div>
+      <div class="cred-right">
+        <div class="sec-tag green" style="margin-bottom:1.5rem"><span class="sec-tag-line"></span>A track record of firsts</div>
+        <div class="timeline">
+          <div class="tl-item">
+            <div class="tl-left"><span class="tl-year">2002</span><span class="tl-dot"></span></div>
+            <div class="tl-content"><h4>First LP stake transaction</h4><p>At a time when the secondary market for fund interests barely existed, we completed our first transaction — establishing the practice that is now mainstream.</p></div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-left"><span class="tl-year">2008</span><span class="tl-dot"></span></div>
+            <div class="tl-content"><h4>First NAV financing</h4><p>Pioneered NAV-based financing structures to provide liquidity without requiring an outright sale — a structure now widely used across the industry.</p></div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-left"><span class="tl-year">2010</span><span class="tl-dot"></span></div>
+            <div class="tl-content"><h4>First GP-led transaction</h4><p>Advised on one of the earliest GP-led secondary transactions in Europe — a structure that now dominates secondary market activity.</p></div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-left"><span class="tl-year">2012</span><span class="tl-dot"></span></div>
+            <div class="tl-content"><h4>First continuation vehicle</h4><p>Structured one of the first continuation vehicles in the European market — giving LPs a liquidity option and GPs a path to extend high-performing assets.</p></div>
+          </div>
+          <div class="tl-item">
+            <div class="tl-left"><span class="tl-year">2026</span><span class="tl-dot" style="background:var(--forest-light)"></span></div>
+            <div class="tl-content"><h4>ClearingStakes launches</h4><p>The same institutional process, made accessible to LP stakeholders from $1M — for the first time.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRACK RECORD -->
+<section id="track">
+  <div class="container">
+    <div class="sec-tag"><span class="sec-tag-line"></span>Track Record</div>
+    <h2>Selected transactions.</h2>
+    <p style="color:var(--muted);max-width:560px;margin-bottom:2.5rem;font-size:16px">Anonymised for confidentiality. Reflects advisory mandates completed by the ClearingStakes team at prior institutions. Past transactions are not indicative of future results.</p>
+    <div class="track-stats">
+      <div class="t-stat"><span class="t-num">$1.5B+</span><span class="t-label">Transactions advised</span></div>
+      <div class="t-stat"><span class="t-num">30+</span><span class="t-label">Completed transactions</span></div>
+      <div class="t-stat"><span class="t-num">15+</span><span class="t-label">Years in secondary markets</span></div>
+      <div class="t-stat"><span class="t-num">500+</span><span class="t-label">Qualified buyers in network</span></div>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Transaction type</th><th>Asset class</th><th>Size</th><th>Geography</th><th>Year</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>LP-led Fund Portfolio Sale</td><td>PE / VC</td><td>€90M</td><td>Europe</td><td>2016</td><td><span class="badge badge-done"><span class="bdot"></span>Completed</span></td></tr>
+        <tr><td>LP-led Sale of Two Fund Interests</td><td>Real Estate</td><td>£120M</td><td>Europe</td><td>2015</td><td><span class="badge badge-done"><span class="bdot"></span>Completed</span></td></tr>
+        <tr><td>LP-led Sale of Single Fund Interest</td><td>Private Equity</td><td>$60M</td><td>Europe</td><td>2015</td><td><span class="badge badge-done"><span class="bdot"></span>Completed</span></td></tr>
+        <tr><td>LP-led Fund Portfolio Sale</td><td>PE / VC</td><td>$190M</td><td>Middle East</td><td>2014</td><td><span class="badge badge-done"><span class="bdot"></span>Completed</span></td></tr>
+        <tr><td>GP-led Single Asset Secondary</td><td>Growth Equity</td><td>$80M</td><td>Europe</td><td>2025</td><td><span class="badge badge-done"><span class="bdot"></span>Completed</span></td></tr>
+        <tr><td>GP-led Preferred Equity Solution</td><td>Private Equity</td><td>$150M NAV</td><td>United States</td><td>2025</td><td><span class="badge badge-done"><span class="bdot"></span>Completed</span></td></tr>
+        <tr><td>LP-led Sale of Single Fund Interest</td><td>PE / VC</td><td>€1.1M</td><td>Europe</td><td>2026</td><td><span class="badge badge-live"><span class="bdot"></span>In progress</span></td></tr>
+        <tr><td>LP-led Fund Portfolio Sale</td><td>PE / VC</td><td>$5M NAV</td><td>Australasia</td><td>2026</td><td><span class="badge badge-live"><span class="bdot"></span>In progress</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section id="faq">
+  <div class="container">
+    <div class="faq-layout">
+      <div>
+        <div class="sec-tag"><span class="sec-tag-line"></span>FAQ</div>
+        <h2>Questions worth asking.</h2>
+        <p style="color:var(--muted);font-size:15px;line-height:1.7;margin-bottom:2rem">You have probably never done this before. Here is exactly how it works. Still have a question?</p>
+        <a href="https://calendly.com/YOUR-CAL-LINK" target="_blank" class="btn-outline" style="display:inline-flex">Speak to the team</a>
+      </div>
+      <div>
+        <details open>
+          <summary>How do I know if my stake qualifies?<span class="faq-plus">+</span></summary>
+          <p>Submit an initial enquiry using the form on this page. We review every submission and respond within 48 hours with an honest assessment of your position and whether it meets our selection criteria. There is no cost at this stage and no commitment required.</p>
+        </details>
+        <details>
+          <summary>What is the minimum stake size?<span class="faq-plus">+</span></summary>
+          <p>We work with LP stakes from $1M in NAV. Below this threshold, the economics of a structured advisory process become difficult to justify for all parties. If your stake is below $1M, we are happy to provide an informal assessment and point you towards appropriate alternatives.</p>
+        </details>
+        <details>
+          <summary>What types of fund interests can I sell?<span class="faq-plus">+</span></summary>
+          <p>We work with single LP fund interests, portfolios of LP interests, co-investment positions, and preferred equity structures. Asset classes include venture capital, private equity, growth equity, and real assets. Complex and structured situations are a core part of our practice.</p>
+        </details>
+        <details>
+          <summary>How long does the process take?<span class="faq-plus">+</span></summary>
+          <p>Getting to a first price indication takes days. A binding offer from a qualified buyer takes weeks. Completing the transaction — including legal documentation and GP consents — typically takes 3 to 5 months in total, depending on complexity. We set a defined timetable at the outset and manage to it.</p>
+        </details>
+        <details>
+          <summary>Why does a competitive process matter?<span class="faq-plus">+</span></summary>
+          <p>One buyer produces one price — theirs. Thirty buyers competing for your position produces a market price. The difference between a bilateral approach and a structured competitive process is typically significant. That difference is the value ClearingStakes delivers.</p>
+        </details>
+        <details>
+          <summary>Will my GP find out I am exploring a sale?<span class="faq-plus">+</span></summary>
+          <p>We manage confidentiality carefully throughout. Your identity is not disclosed to prospective buyers until a confidentiality agreement is in place. Where GP consent or right of first refusal notice is required under your fund agreement, we advise on timing and approach to minimise market signal.</p>
+        </details>
+        <details>
+          <summary>Do you work with GPs as well as LPs?<span class="faq-plus">+</span></summary>
+          <p>Yes. We work with GPs running LP tender processes, continuation vehicles, and structured liquidity events for their fund. Contact us directly to discuss.</p>
+        </details>
+        <details>
+          <summary>What are your fees?<span class="faq-plus">+</span></summary>
+          <p>Fees are discussed during the initial eligibility assessment and set out in the formal engagement agreement. There is no cost at the enquiry stage and no commitment required. We work on a success fee basis — nothing is payable unless a transaction completes.</p>
+        </details>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REGISTER -->
+<section id="register">
+  <div class="register-inner">
+    <div class="sec-tag green" style="justify-content:center;margin-bottom:1rem"><span class="sec-tag-line"></span>Get Started</div>
+    <h2>Find out if your stake qualifies.</h2>
+    <p class="reg-sub"><strong>48-hour response.</strong> No cost. No commitment.</p>
+    <div class="reg-steps">
+      <div class="reg-step">
+        <p class="reg-n">Step 01</p>
+        <h4>Describe your position</h4>
+        <p>Fund type, vintage, approximate NAV, and your objectives. Five minutes.</p>
+      </div>
+      <div class="reg-step">
+        <p class="reg-n">Step 02</p>
+        <h4>We assess and respond</h4>
+        <p>Within 48 hours — an honest view on your position and whether it meets our criteria.</p>
+      </div>
+      <div class="reg-step">
+        <p class="reg-n">Step 03</p>
+        <h4>Engagement agreement</h4>
+        <p>If your position qualifies and you wish to proceed, a formal engagement agreement is entered into before any process begins.</p>
+      </div>
+    </div>
+    <div class="reg-ctas">
+      <a href="https://tally.so/YOUR-FORM-ID" target="_blank" class="btn-white">Apply to see if you qualify <span class="arr"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span></a>
+      <a href="https://calendly.com/YOUR-CAL-LINK" target="_blank" class="btn-outline-white">Speak to the team first</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <p class="footer-brand">Clearing<em>Stakes</em></p>
+        <p class="footer-tagline">The secondary market process that small LP stakeholders have never had access to. Until now.</p>
+      </div>
+      <div class="footer-cols">
+        <div class="footer-col">
+          <h5>Navigate</h5>
+          <ul>
+            <li><a href="#problem">The Problem</a></li>
+            <li><a href="#get">What You Get</a></li>
+            <li><a href="#process">How It Works</a></li>
+            <li><a href="#credentials">Our Background</a></li>
+            <li><a href="#track">Track Record</a></li>
+            <li><a href="#faq">FAQ</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h5>Get Started</h5>
+          <ul>
+            <li><a href="https://tally.so/YOUR-FORM-ID" target="_blank">Apply to see if you qualify</a></li>
+            <li><a href="https://calendly.com/YOUR-CAL-LINK" target="_blank">Speak to the team</a></li>
+            <li><a href="mailto:hello@clearingstakes.com">hello@clearingstakes.com</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h5>Legal</h5>
+          <ul>
+            <li><a href="disclaimer.html">Disclaimer</a></li>
+            <li><a href="privacy.html">Privacy Policy</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <hr class="footer-hr">
+    <div class="footer-regulatory">
+      ClearingStakes is a trading name of Meantime Advisory Limited (registered in England and Wales, Company No. 12434310), which is an Introducer Appointed Representative of Crito Capital LLP (FRN: 681420), authorised and regulated by the Financial Conduct Authority. Meantime Advisory Limited FRN: 977229.
+    </div>
+    <p class="footer-legal">This website is for information purposes only and does not constitute investment advice, a financial promotion, or a solicitation to engage in any regulated activity. All enquiries are subject to eligibility assessment. A formal engagement agreement with Meantime Advisory Limited is required before any services are provided. Past transactions referenced on this website were completed by the ClearingStakes team at prior institutions and are not indicative of future results.<br><br>© 2026 ClearingStakes. All rights reserved.</p>
+  </div>
+</footer>
+
+</body>
+</html>
